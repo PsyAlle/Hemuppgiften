@@ -52,6 +52,9 @@ const FormSchema = z.object({
   };
 
 
+
+  
+
   export async function createInvoice(prevState: State, formData: FormData) {
     // Validate form using Zod
     const validatedFields = CreateInvoice.safeParse({
@@ -90,6 +93,84 @@ const FormSchema = z.object({
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
   }
+
+
+
+  const FormSchema2 = z.object({
+    id: z.string(),
+    type: z.string({
+      invalid_type_error: 'Välj vilken typ av hemuppgift du försöker lägga till.',
+    }),
+    title: z.string({
+      invalid_type_error: 'Din hemuppgift måste ha ett namn.',
+    }).min(1, { message: 'Din hemuppgift måste ha ett namn.' }),
+
+     link: z.string({
+      invalid_type_error: 'Du måste lägga till en länk till hemuppgiften.',
+    }).min(1, { message: 'Du måste lägga till en länk till hemuppgiften.' }),
+    besk: z.string({
+      invalid_type_error: 'Du måste lägga till en kort beskrivning av hemuppgiften.',
+    }).min(1, { message: 'Du måste lägga till en kort beskrivning av hemuppgiften.' }),
+    date: z.string(),
+  });
+   
+  const CreateHemuppgift = FormSchema2.omit({ id: true, date: true });
+
+  export type State2 = {
+    errors?: {
+      type?: string[];
+      title?: string[];
+      link?: string[];
+      besk?: string[];
+    };
+    message?: string | null;
+  };
+
+  export async function createHemuppgift(prevState: State2, formData: FormData) {
+    // Validate form using Zod
+    const validatedFieldsHemuppgift = CreateHemuppgift.safeParse({
+      type: formData.get('type'),
+      title: formData.get('title'),
+      link: formData.get('link'),
+      besk: formData.get('besk'),
+    });
+    console.log(validatedFieldsHemuppgift);
+   
+    // If form validation fails, return errors early. Otherwise, continue.
+    if (!validatedFieldsHemuppgift.success) {
+      return {
+        errors: validatedFieldsHemuppgift.error.flatten().fieldErrors,
+        message: 'Du verkar ha missat att fylla i något, vi kunde inte lägga till hemuppgiften.',
+      };
+    }
+   
+
+  // Prepare data for insertion into the database
+  const { type, title, link, besk} = validatedFieldsHemuppgift.data;
+    const date = new Date().toISOString().split('T')[0];
+    const id = 1123123123;
+   
+    // Insert data into the database
+    try {
+      await sql`
+        INSERT INTO hemuppgifter (title, type, besk, link, date)
+        VALUES (${title}, ${type}, ${besk}, ${link}, ${date})
+        `;
+    } catch (error) {
+      console.log(error)
+      
+      // If a database error occurs, return a more specific error.
+      return {
+    
+        message: 'Database Error: Failed to Create Invoice.',
+      };
+    }
+   
+    // Revalidate the cache for the invoices page and redirect the user.
+    revalidatePath('/hemuppgifter');
+    redirect('/hemuppgifter');
+  }
+
 
 
   const UpdateInvoice = FormSchema.omit({ id: true, date: true });
@@ -140,3 +221,5 @@ export async function updateInvoice(
       return { message: 'Database Error: Failed to Delete Invoice.' };
     }
   }
+
+
