@@ -97,7 +97,6 @@ const FormSchema = z.object({
 
 
   const FormSchema2 = z.object({
-    id: z.string(),
     type: z.string({
       invalid_type_error: 'Välj vilken typ av hemuppgift du försöker lägga till.',
     }),
@@ -123,6 +122,7 @@ const FormSchema = z.object({
       link?: string[];
       besk?: string[];
     };
+    messagedup?: string | null;
     message?: string | null;
   };
 
@@ -134,7 +134,7 @@ const FormSchema = z.object({
       link: formData.get('link'),
       besk: formData.get('besk'),
     });
-    console.log(validatedFieldsHemuppgift);
+   
    
     // If form validation fails, return errors early. Otherwise, continue.
     if (!validatedFieldsHemuppgift.success) {
@@ -148,7 +148,7 @@ const FormSchema = z.object({
   // Prepare data for insertion into the database
   const { type, title, link, besk} = validatedFieldsHemuppgift.data;
     const date = new Date().toISOString().split('T')[0];
-    const id = 1123123123;
+   
    
     // Insert data into the database
     try {
@@ -157,11 +157,10 @@ const FormSchema = z.object({
         VALUES (${title}, ${type}, ${besk}, ${link}, ${date})
         `;
     } catch (error) {
-      console.log(error)
-      
       // If a database error occurs, return a more specific error.
+      if(error.code==="23505")return{ messagedup: 'Det finns redan en hemuppgift med detta namn, välj ett annat'}
       return {
-    
+     
         message: 'Database Error: Failed to Create Invoice.',
       };
     }

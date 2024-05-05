@@ -15,7 +15,7 @@ import { useFormState } from 'react-dom';
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
   const initialState = { message: null, errors: {} };
-
+const types = ["Funktionell analys", "Beteendeexperiment", "Psykoedukation"]
 
   const [state, dispatch] = useFormState(createHemuppgift, initialState);
   return( <form action={dispatch}>
@@ -37,9 +37,9 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
               <option value="" disabled>
                 Välj en typ
               </option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
+              {types.map((type, index) => (
+                <option key={index} value={type}>
+                  {type}
                 </option>
               ))}
             </select>
@@ -73,7 +73,14 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
               <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
           
         </div>
-        
+        <div id="dup-error" aria-live="polite" aria-atomic="true">
+        {state.messagedup &&
+            <p className="mt-2 text-sm text-red-500" key="duberror">
+              {state.messagedup}
+            </p>
+          }
+      </div>
+
         <div id="title-error" aria-live="polite" aria-atomic="true">
         {state.errors?.title &&
           state.errors.title.map((error: string) => (
@@ -145,6 +152,10 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
           ))}
       </div>
 
+  
+      <p className="mt-2 text-sm text-red-500" key="error">
+              {state.message}
+            </p>
      
           </div>
         </div>
