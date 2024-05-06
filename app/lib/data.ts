@@ -7,6 +7,7 @@ import {
   LatestInvoiceRaw,
   User,
   Revenue,
+  HemuppgifterTable
 } from './definitions';
 import { formatCurrency } from './utils';
 import { unstable_noStore as noStore } from 'next/cache'; // Bra om dynamisk hemsida, dvs updateringar i realtid
@@ -90,6 +91,59 @@ export async function fetchCardData() {
     throw new Error('Failed to fetch card data.');
   }
 }
+
+
+const ITEMS_PER_PAGE_HEM = 6;
+export async function fetchFilteredhemuppgifter(
+  query: string,
+  currentPage: number,
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE_HEM;
+
+  try {
+    const hemuppgifter = await sql<HemuppgifterTable>`
+    SELECT
+    hemuppgifter.title,
+    hemuppgifter.type,
+    hemuppgifter.besk,
+    hemuppgifter.link,
+    hemuppgifter.date
+    FROM hemuppgifter
+    WHERE
+      hemuppgifter.title ILIKE ${`%${query}%`} OR
+      hemuppgifter.type ILIKE ${`%${query}%`}
+      ORDER BY hemuppgifter.title DESC
+      LIMIT ${ITEMS_PER_PAGE_HEM} OFFSET ${offset}
+    `;
+
+    return hemuppgifter.rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch hemuppgifter.');
+  }
+}
+
+export async function fetchHemuppgifterPages(query: string) {
+  noStore();
+  try {
+    const count = await sql`SELECT COUNT(*)
+    FROM hemuppgifter
+    WHERE
+    hemuppgifter.title ILIKE ${`%${query}%`} OR
+    hemuppgifter.type ILIKE ${`%${query}%`}
+  `;
+
+    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE_HEM);
+    return totalPages;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number hemuppgifter.');
+  }
+}
+
+
+
+
 
 const ITEMS_PER_PAGE = 6;
 export async function fetchFilteredInvoices(

@@ -156,12 +156,16 @@ const FormSchema = z.object({
         INSERT INTO hemuppgifter (title, type, besk, link, date)
         VALUES (${title}, ${type}, ${besk}, ${link}, ${date})
         `;
-    } catch (error) {
+    } catch (error: unknown) {
+     
       // If a database error occurs, return a more specific error.
-      if(error.code==="23505")return{ messagedup: 'Det finns redan en hemuppgift med detta namn, välj ett annat'}
+      if (error instanceof Error) {
+        if(error.code==="23505")return{ messagedup: 'Det finns redan en hemuppgift med detta namn, välj ett annat'}
+      }
+      
       return {
      
-        message: 'Database Error: Failed to Create Invoice.',
+        message: 'Något gick',
       };
     }
    
